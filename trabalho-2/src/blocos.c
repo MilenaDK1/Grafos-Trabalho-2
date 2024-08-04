@@ -56,7 +56,6 @@ void printBlocks(bloco_t *bls, size_t n);
 grafo_t *ler_grafo(void) {
     int n;
     scanf("%d", &n); // num de vertices
-    printf("n: %d\n", n);
     grafo_t *grafo = malloc(sizeof(grafo_t));
     grafo->n_vertices = (size_t)n;
     grafo->m_arestas = 0;
@@ -67,10 +66,12 @@ grafo_t *ler_grafo(void) {
     
     // preenche matriz de adjacencia
     int v1, v2;
-    while(scanf("%d %d", &v1, &v2) != EOF) {
+    while(scanf("%d", &v1) != EOF) {
+        if (scanf("%d", &v2) == EOF) {
+            return NULL;
+        }
         grafo->matriz_adj[v1 - 1][v2 - 1] = 1;
         grafo->matriz_adj[v2 - 1][v1 - 1] = 1;
-        printf("v1: %d, v2: %d\n", v1, v2);
         grafo->m_arestas++;
     }
 
@@ -314,33 +315,30 @@ void printBlocks(bloco_t *bls, size_t n) {
 
 info_t *info_blocos(unsigned int *num_blocos) { 
     grafo_t *grafo = ler_grafo();
+    if (grafo == NULL) {
+        printf("Erro: número ímpar de vértices\n");
+        printf("Resultado indefinido!\n");
+        exit(EXIT_FAILURE);
+    }
     dfs(grafo);
     encontraArticulacoes(grafo);
     decomposeDif(grafo);
-    //imprimir_grafo(grafo);
+    
     bloco_t *bls = separaBlocos(grafo);
-    printBlocks(bls, grafo->comp_num);
-
     info_t *info = malloc(sizeof(info_t) * grafo->comp_num);
     for (size_t i = 0; i < grafo->comp_num; i++) {
-        printf("Componente %ld\n", i + 1);
         info[i].vertices = (unsigned int) bls[i].n;
         info[i].arestas = 0;
         
         for (size_t j = 0; j < bls[i].n; j++) {
             for (size_t k = 0; k < bls[i].n; k++) {
-                printf("Verificando aresta %d %d\n", bls[i].vertices[j]->label, bls[i].vertices[k]->label);
                 if (grafo->matriz_adj[bls[i].vertices[j]->label][bls[i].vertices[k]->label] == 1) {
-                    printf("Aresta encontrada\n");
                     info[i].arestas++;
                 }
             }
         }
         
         info[i].arestas /= 2;
-        printf("Vertices: %d\n", info[i].vertices);
-        printf("Arestas: %d\n", info[i].arestas);
-        printf("--------------\n\n");
     }
 
     *num_blocos = (unsigned int) grafo->comp_num;
